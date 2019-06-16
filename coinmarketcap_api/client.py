@@ -39,7 +39,7 @@ class CoinMarketCap:
             raise CoinMarketCapError(status['error_message'],
                     status['error_code'])
 
-        return res
+        return res.json()
 
     def _get(self, endpoint, *args, **kwargs):
         return self._request('get', endpoint, *args, **kwargs)
@@ -62,6 +62,9 @@ class CoinMarketCapCryptocurrency:
     def __init__(self, client):
         self._client = client
 
+    def _list_to_comma_separated(self, ls):
+        return ','.join(map(lambda x: str(x), ls)) if isinstance(ls, list) else str(ls)
+
     def idmap(self, listing_status=ACTIVE, start=1, limit=None, symbol=None):
         """
         Get ID map of cryptocurrencies.
@@ -82,7 +85,7 @@ class CoinMarketCapCryptocurrency:
             'listing_status': listing_status,
             'start': start,
             'limit': limit,
-            'symbol': ','.join(symbol) if isinstance(symbol, list) else symbol
+            'symbol': self._list_to_comma_separated(symbol),
         }
 
         return self._client._get('/v1/cryptocurrency/map', params=params)
@@ -107,7 +110,7 @@ class CoinMarketCapCryptocurrency:
         params = {
             'id': ','.join(ids) if isinstance(ids, list) else ids,
             'slug': ','.join(slug) if isinstance(slug, list) else slug,
-            'symbol': ','.join(symbol) if isinstance(symbol, list) else symbol,
+            'symbol': self._list_to_comma_separated(symbol),
         }
 
         return self._client._get('/v1/cryptocurrency/info', params=params)
@@ -143,8 +146,8 @@ class CoinMarketCapCryptocurrency:
         params = {
             'start': start,
             'limit': limit,
-            'convert': ','.join(convert) if isinstance(convert, list) else convert,
-            'convert_id': ','.join(convert_id) if isinstance(convert_id, list) else convert_id,
+            'convert': self._list_to_comma_separated(convert),
+            'convert_id': self._list_to_comma_separated(convert_id),
             'sort': sort_by,
             'sort_dir': sort_dir,
             'cryptocurrency_type': cryptocurrency_type,
@@ -161,12 +164,11 @@ class CoinMarketCapCryptocurrency:
             raise CoinMarketCapError('Either of the convert or convert_id has to be provided')
 
         params = {
-            'id': ','.join(ids) if isinstance(ids, list) else ids,
-            'slug': ','.join(slug) if isinstance(slug, list) else slug,
-            'symbol': ','.join(symbol) if isinstance(symbol, list) else symbol,
-            'convert': ','.join(convert) if isinstance(convert, list) else convert,
-            'convert_id': ','.join(convert_id) if isinstance(convert_id, list)
-            else convert_id,
+            'id': self._list_to_comma_separated(ids),
+            'slug': self._list_to_comma_separated(slug),
+            'symbol': self._list_to_comma_separated(symbol),
+            'convert': self._list_to_comma_separated(convert),
+            'convert_id': self._list_to_comma_separated(convert_id),
         }
 
         return self._client._get('/v1/cryptocurrency/quotes/latest',
